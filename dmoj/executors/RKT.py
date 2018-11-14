@@ -12,10 +12,7 @@ class Executor(ScriptDirectoryMixin, CompiledExecutor):
     command = 'racket'
 
     syscalls = ['epoll_create', 'epoll_wait', 'poll']
-    # Racket SIGABRTs under low-memory conditions before actually crossing the memory limit,
-    # so give it a bit of headroom to be properly marked as MLE.
-    data_grace = 4096
-    address_grace = 131072
+    address_grace = 1310720
 
     test_program = '''\
 #lang racket
