@@ -9,7 +9,7 @@ class Executor(ScriptExecutor):
     syscalls = ['epoll_ctl', 'epoll_create', 'epoll_wait', 'poll',                                                                                                                          
                 'epoll_create1', 'pipe2', 'eventfd2', 'rt_sigtimedwait',                                                                                                                    
                 'sched_getaffinity', 'sched_setaffinity', 'mbind',                                                                                                                          
-                'mincore', 'memfd_create', 'pwrite64']                                                                                                                                                                  
+                'mincore', 'memfd_create', 'pwrite64', 'msync']                                                                                                                                                                  
     fs = ['/opt/julia-1\.0\.1/.*', '/home/judge/\.julia/.*', '']                                                                                                                                                                                            
     address_grace = 131072 << 2                                                                                                                                                             
     nproc = -1                                                                                                                                                                            
