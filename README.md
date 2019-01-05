@@ -11,9 +11,9 @@ Python [AGPLv3](https://github.com/SchOJ/judge/blob/master/LICENSE) contest judg
 
 ## Supported Platforms and Runtimes
 
-Our instance runs on Linux x64. DMOJ/judge supports more architectures. Since we also update from upstream, SchOJ/judge may also works on these architectures.
+Our instance runs on Linux x64. DMOJ/judge supports more architectures. Since we also update from upstream, SchOJ/judge may also work on these architectures.
 
-The DMOJ judge does **not** need a root user to run on Linux machines: it will run just fine under a normal user. However, to run it in Docker, a [privileged](https://docs.docker.com/engine/reference/run/#runtime-privilege-and-linux-capabilities) permission is needed.
+The judge does **not** need a root user to run on Linux machines: it will run just fine under a normal user. However, to run it in Docker, a [privileged](https://docs.docker.com/engine/reference/run/#runtime-privilege-and-linux-capabilities) permission is needed.
 
 Supported languages include:
 * C++ 11/14/17 (GCC and Clang)
