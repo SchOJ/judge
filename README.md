@@ -1,37 +1,19 @@
 # SchOJ Judge [![Linux Build Status](https://img.shields.io/travis/SchOJ/judge.svg?logo=linux)](https://travis-ci.org/SchOJ/judge)
 
-**Modified from [DMOJ/judge](https://github.com/DMOJ/judge)**
+**A fork of [DMOJ/judge](https://github.com/DMOJ/judge)**
 
-Python [AGPLv3](https://github.com/DMOJ/judge/blob/master/LICENSE) contest judge backend for the [DMOJ site](http://github.com/DMOJ/site) interface.
+Python [AGPLv3](https://github.com/SchOJ/judge/blob/master/LICENSE) contest judge backend for the [SchOJ](http://github.com/SchOJ/site) / [DMOJ](http://github.com/DMOJ/site) site interface.
 
-<table>
-<tr>
-<td>
-<a href="http://dmoj.ca">
-<img src="https://avatars2.githubusercontent.com/u/6934864?v=3&s=100" align="left"></img>
-</a>
-</td>
-<td>
-A modern online judge and contest platform system, supporting <b>IO-based</b>, <b>interactive</b>, and <b>signature-graded</b> tasks,
-            with <b>runtime data generators</b> and <b>custom output validators</b>.
-</td>
-</tr>
-</table>
+## What is added?
+
+* New language support (like Julia)
+* `unittest` capability
 
 ## Supported Platforms and Runtimes
 
-The judge implements secure grading on Linux and FreeBSD machines.
+Our instance runs on Linux x64. DMOJ/judge supports more architectures. Since we also update from upstream, SchOJ/judge may also works on these architectures.
 
-|           | Linux 	| FreeBSD 	|
-|------	|-------	|---------	|
-| x64  	| [✔](https://travis-ci.org/DMOJ/judge)     	| [✔](https://ci.dmoj.ca/job/dmoj-judge-freebsd/)       	|
-| x86  	| ✔     	|       ¯\\\_(ツ)\_/¯   |
-| x32 	| ✔     	|      &mdash;   	|
-| ARM  	| ✔     	|      ❌   	|
-
-Versions up to and including [v1.4.0](https://github.com/DMOJ/judge/releases/tag/v1.4.0) also supported grading on Windows machines.
-
-The DMOJ judge does **not** need a root user to run on Linux machines: it will run just fine under a normal user.
+The DMOJ judge does **not** need a root user to run on Linux machines: it will run just fine under a normal user. However, to run it in Docker, a [privileged](https://docs.docker.com/engine/reference/run/#runtime-privilege-and-linux-capabilities) permission is needed.
 
 Supported languages include:
 * C++ 11/14/17 (GCC and Clang)
@@ -42,6 +24,7 @@ Supported languages include:
 * Pascal
 * Perl
 * Mono C#/F#/VB
+* Julia
 
 The judge can also grade in the languages listed below. These languages are less tested and more likely to be buggy.
 * Ada
@@ -77,34 +60,10 @@ The judge can also grade in the languages listed below. These languages are less
 * Brain\*\*\*\*
 
 ## Installation
-Installing the DMOJ judge creates two executables in your Python's script directory: `dmoj` and `dmoj-cli`.
-`dmoj` is used to connect a judge to a DMOJ site instance, while `dmoj-cli` provides a command-line interface to a
-local judge, useful for testing problems.
 
-For more detailed steps, read the [installation instructions](https://docs.dmoj.ca/#/judge/linux_installation).
+We don't publish the package to Pypi while DMOJ/judge [does](https://pypi.python.org/pypi/dmoj).
 
-Note that **the only officially-supported Linux distribution is the latest Debian**, with the default `apt` versions of all runtimes. This is [what we run on dmoj.ca](https://dmoj.ca/runtimes/matrix/), and it should "just work". While the judge will likely still work with other distributions and runtime versions, some runtimes might fail to initialize. In these cases, please [file an issue](https://github.com/DMOJ/judge/issues).
-
-### Stable Build
-[![PyPI version](https://badge.fury.io/py/dmoj.svg)](https://pypi.python.org/pypi/dmoj)
-[![PyPI](https://img.shields.io/pypi/pyversions/dmoj.svg)](https://pypi.python.org/pypi/dmoj)
-
-We periodically publish builds [on PyPI](https://pypi.python.org/pypi/dmoj). This is the easiest way to get started,
-but may not contain all the latest features and improvements.
-
-```
-$ pip install dmoj
-```
-
-### Bleeding-Edge Build
-This is the version of the codebase we run live on [dmoj.ca](https://dmoj.ca).
-
-```
-$ git clone https://github.com/DMOJ/judge.git
-$ cd judge
-$ git submodule update --init --recursive
-$ pip install -e .
-```
+The [Linux Installation](https://docs.dmoj.ca/en/latest/judge/linux_installation/) instructions of DMOJ/judge also works on SchOJ/judge.
 
 Several environment variables can be specified to control the compilation of the sandbox:
 
