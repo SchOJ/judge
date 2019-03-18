@@ -2,6 +2,7 @@ from dmoj.graders.standard import StandardGrader
 from dmoj.judgeenv import get_problem_root
 from dmoj.error import CompileError
 from dmoj.executors import executors
+from dmoj.utils.communicate import OutputLimitExceeded
 import os
 
 # Change on unittest module is needed for unittest to run properly.
