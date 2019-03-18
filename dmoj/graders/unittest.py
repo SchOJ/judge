@@ -3,6 +3,7 @@ from dmoj.judgeenv import get_problem_root
 from dmoj.error import CompileError
 from dmoj.executors import executors
 from dmoj.utils.communicate import OutputLimitExceeded
+from logging import getLogger
 import os
 
 # Change on unittest module is needed for unittest to run properly.
@@ -20,6 +21,8 @@ import os
 # 
 #  main = TestProgram
 #
+
+log = getLogger('dmoj.graders')
 
 class UnitTestGrader(StandardGrader):
     def check_result(self, case, result):
