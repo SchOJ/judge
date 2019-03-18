@@ -4,6 +4,7 @@ from dmoj.error import CompileError
 from dmoj.executors import executors
 from dmoj.utils.communicate import OutputLimitExceeded
 from logging import getLogger
+from dmoj.result import Result
 import os
 
 # Change on unittest module is needed for unittest to run properly.
