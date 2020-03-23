@@ -1,8 +1,7 @@
-from .base_executor import CompiledExecutor
-from dmoj.executors.mixins import EmulateTerminalMixin
+from dmoj.executors.compiled_executor import CompiledExecutor
 
 
-class Executor(EmulateTerminalMixin, CompiledExecutor):
+class Executor(CompiledExecutor):
     ext = '.cr'
     name = 'CYT'
     command = 'crystal'
