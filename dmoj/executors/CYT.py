@@ -9,4 +9,4 @@ class Executor(CompiledExecutor):
     test_program = 'puts gets'
 
     def get_compile_args(self):
-        return [self.get_command(), 'build', self._code]
+        return [self.get_command(), 'build', self._code, '-o', self.problem]
