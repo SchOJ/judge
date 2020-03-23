@@ -11,7 +11,7 @@ class Executor(ScriptDirectoryMixin, CompiledExecutor):
 
     command = 'racket'
 
-    syscalls = ['epoll_create', 'epoll_wait', 'poll']
+    syscalls = ['epoll_create', 'epoll_wait', 'poll', 'clock_nanosleep']
     address_grace = 1310720
 
     test_program = '''\
