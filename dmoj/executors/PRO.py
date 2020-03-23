@@ -5,6 +5,7 @@ class Executor(ScriptExecutor):
     ext = 'pl'
     name = 'PRO'
     command = 'swipl'
+    syscalls = ['clock_nanosleep', 'openat']
     test_program = '''
     :- set_prolog_flag(verbose,silent).
     :- prompt(_, '').
