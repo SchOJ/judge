@@ -88,6 +88,8 @@ class Judge:
             grader_class = graders.BridgedInteractiveGrader
         elif 'custom_judge' in problem.config:
             grader_class = graders.CustomGrader
+        elif 'unit_test' in problem.config:
+            grader_class = graders.UnitTestGrader
         else:
             grader_class = graders.StandardGrader
 

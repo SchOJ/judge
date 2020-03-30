@@ -1,62 +1,113 @@
-from dmoj.graders.standard import StandardGrader
-from dmoj.judgeenv import get_problem_root
-from dmoj.error import CompileError
-from dmoj.executors import executors
-from dmoj.utils.communicate import OutputLimitExceeded
-from logging import getLogger
-from dmoj.result import Result
+import gc
+import logging
+import platform
+import subprocess
 import os
 
-# Change on unittest module is needed for unittest to run properly.
-# Diff goes:
-#
-# --- main.py2    2018-12-07 18:00:00.000000000 +0000
-# +++ main.py     2018-12-07 17:59:00.000000000 +0000
-# @@ -230,7 +230,7 @@
-#              # it is assumed to be a TestRunner instance
-#              testRunner = self.testRunner
-#          self.result = testRunner.run(self.test)
-# -        if self.exit:
-# +        if not self.result.wasSuccessful():
-#              sys.exit(not self.result.wasSuccessful())
-# 
-#  main = TestProgram
-#
+from dmoj.error import OutputLimitExceeded
+from dmoj.executors import executors
+from dmoj.graders.base import BaseGrader
+from dmoj.result import CheckerResult, Result
+from dmoj.judgeenv import get_problem_root
 
-log = getLogger('dmoj.graders')
+log = logging.getLogger('dmoj.graders')
 
-class UnitTestGrader(StandardGrader):
+
+class UnitTestGrader(BaseGrader):
+    def grade(self, case):
+        result = Result(case)
+
+        if self.language != "PY3":
+            # If not python 3, give a runtime error.
+            result.result_flag = Result.RTE
+            result.points = 0
+            result.feedback = "Unittest only works on Python 3."
+            return result
+
+        input = case.input_data()  # cache generator data
+
+        self._launch_process(case)
+
+        error = self._interact_with_process(case, result, input)
+
+        process = self._current_proc
+
+        self.populate_result(error, result, process)
+
+        check = self.check_result(case, result)
+
+        # checkers must either return a boolean (True: full points, False: 0 points)
+        # or a CheckerResult, so convert to CheckerResult if it returned bool
+        if not isinstance(check, CheckerResult):
+            check = CheckerResult(check, case.points if check else 0.0)
+
+        if result.result_flag & Result.IR:
+            result.result_flag = Result.WA
+        result.points = check.points
+        result.feedback = check.feedback or result.feedback
+        result.extended_feedback = check.extended_feedback or result.extended_feedback
+
+        case.free_data()
+
+        # Where CPython has reference counting and a GC, PyPy only has a GC. This means that while CPython
+        # will have freed any (usually massive) generated data from the line above by reference counting, it might
+        # - and probably still is - in memory by now. We need to be able to fork() immediately, which has a good chance
+        # of failing if there's not a lot of swap space available.
+        #
+        # We don't really have a way to force the generated data to disappear, so calling a gc here is the best
+        # chance we have.
+        if platform.python_implementation() == 'PyPy':
+            gc.collect()
+
+        return result
+
+    def populate_result(self, error, result, process):
+        self.binary.populate_result(error, result, process)
+
     def check_result(self, case, result):
         # If the submission didn't crash and didn't time out, there's a chance it might be AC
         # We shouldn't run checkers if the submission is already known to be incorrect, because some checkers
         # might be very computationally expensive.
         # See https://github.com/DMOJ/judge/issues/170
-        if not result.result_flag:
-            # Checkers might crash if any data is None, so force at least empty string
-            check = case.checker()(result.proc_output or b'',
-                                   case.output_data() or b'',
-                                   submission_source=self.source,
-                                   judge_input=case.input_data() or b'',
-                                   point_value=case.points,
-                                   case_position=case.position,
-                                   batch=case.batch,
-                                   submission_language=self.language,
-                                   binary_data=case.has_binary_data)
+        checker = case.checker()
+        # checker is a `partial` object, NOT a `function` object
+        if not result.result_flag or getattr(checker.func, 'run_on_error', False):
+            try:
+                check = checker(result.proc_output,
+                                case.output_data(),
+                                submission_source=self.source,
+                                judge_input=case.input_data(),
+                                point_value=case.points,
+                                case_position=case.position,
+                                batch=case.batch,
+                                submission_language=self.language,
+                                binary_data=case.has_binary_data,
+                                execution_time=result.execution_time,
+                                problem_id=self.problem.id)
+            except UnicodeDecodeError:
+                # Don't rely on problemsetters to do sane things when it comes to Unicode handling, so
+                # just proactively swallow all Unicode-related checker errors.
+                return CheckerResult(False, 0, feedback='invalid unicode')
         else:
             # Solution is guaranteed to receive 0 points
             check = False
 
         return check
 
+    def _launch_process(self, case):
+        self._current_proc = self.binary.launch(
+            time=self.problem.time_limit, memory=self.problem.memory_limit, symlinks=case.config.symlinks,
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            wall_time=case.config.wall_time_factor * self.problem.time_limit,
+        )
+
     def _interact_with_process(self, case, result, input):
         process = self._current_proc
         try:
-            result.proc_output, error = process.safe_communicate('', outlimit=case.config.output_limit_length,
-                                                                 errlimit=1048576)
-        except OutputLimitExceeded as ole:
-            stream, result.proc_output, error = ole.args
-            log.warning('OLE on stream: %s', stream)
-            result.result_flag |= Result.OLE
+            result.proc_output, error = process.communicate(input, outlimit=case.config.output_limit_length,
+                                                            errlimit=1048576)
+        except OutputLimitExceeded:
+            error = b''
             try:
                 process.kill()
             except RuntimeError as e:
@@ -71,23 +122,7 @@ class UnitTestGrader(StandardGrader):
         unitTestFile = open(os.path.join(get_problem_root(self.problem.id), self.problem.config['unit_test']),'r')
         unitTestCode = unitTestFile.read()
         unitTestFile.close()
-        from dmoj.utils import ansi
-
-        # If the executor requires compilation, compile and send any errors/warnings to the site
-        try:
-            # Fetch an appropriate executor for the language
-            binary = executors[self.language].Executor(self.problem.id, self.source + '\n\n' + unitTestCode,
-                                                       hints=self.problem.config.hints or [],
-                                                       unbuffered=self.problem.config.unbuffered)
-        except CompileError as compilation_error:
-            error = compilation_error.args[0]
-            error = error.decode('mbcs') if os.name == 'nt' and isinstance(error, six.binary_type) else error
-            self.judge.packet_manager.compile_error_packet(ansi.format_ansi(error or ''))
-
-            # Compile error is fatal
-            raise
-
-        # Carry on grading in case of compile warning
-        if hasattr(binary, 'warning') and binary.warning:
-            self.judge.packet_manager.compile_message_packet(ansi.format_ansi(binary.warning or ''))
-        return binary
+        finalCode = self.source.decode() + '\n\n' + unitTestCode
+        return executors[self.language].Executor(self.problem.id, finalCode.encode(),
+                                                 hints=self.problem.config.hints or [],
+                                                 unbuffered=self.problem.config.unbuffered)
