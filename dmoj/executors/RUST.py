@@ -72,6 +72,7 @@ class Executor(CompiledExecutor):
     command = 'cargo'
     test_program = HELLO_WORLD_PROGRAM
     compiler_time_limit = 20
+    syscalls = ['poll']
 
     def create_files(self, problem_id, source_code, *args, **kwargs):
         os.mkdir(self._file('src'))
